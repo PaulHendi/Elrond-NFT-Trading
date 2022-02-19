@@ -1,0 +1,1 @@
+erdpy --verbose contract query $1 --proxy https://devnet-gateway.elrond.com --function=getTxId --arguments=$2

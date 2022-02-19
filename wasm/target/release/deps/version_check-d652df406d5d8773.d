@@ -1,0 +1,10 @@
+/Users/pilu/Desktop/nft_trading/wasm/target/release/deps/version_check-d652df406d5d8773.rmeta: /Users/pilu/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/version_check-0.9.4/src/lib.rs /Users/pilu/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/version_check-0.9.4/src/version.rs /Users/pilu/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/version_check-0.9.4/src/channel.rs /Users/pilu/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/version_check-0.9.4/src/date.rs
+
+/Users/pilu/Desktop/nft_trading/wasm/target/release/deps/libversion_check-d652df406d5d8773.rlib: /Users/pilu/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/version_check-0.9.4/src/lib.rs /Users/pilu/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/version_check-0.9.4/src/version.rs /Users/pilu/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/version_check-0.9.4/src/channel.rs /Users/pilu/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/version_check-0.9.4/src/date.rs
+
+/Users/pilu/Desktop/nft_trading/wasm/target/release/deps/version_check-d652df406d5d8773.d: /Users/pilu/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/version_check-0.9.4/src/lib.rs /Users/pilu/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/version_check-0.9.4/src/version.rs /Users/pilu/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/version_check-0.9.4/src/channel.rs /Users/pilu/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/version_check-0.9.4/src/date.rs
+
+/Users/pilu/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/version_check-0.9.4/src/lib.rs:
+/Users/pilu/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/version_check-0.9.4/src/version.rs:
+/Users/pilu/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/version_check-0.9.4/src/channel.rs:
+/Users/pilu/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/version_check-0.9.4/src/date.rs:

@@ -1,0 +1,15 @@
+[package]
+name = "nft_trading"
+version = "0.0.0"
+authors = [ "Pilu",]
+edition = "2018"
+publish = false
+
+[lib]
+path = "src/nft_trading.rs"
+
+[dependencies.elrond-wasm]
+version = "0.27.4"
+
+[dev-dependencies.elrond-wasm-debug]
+version = "0.27.4"

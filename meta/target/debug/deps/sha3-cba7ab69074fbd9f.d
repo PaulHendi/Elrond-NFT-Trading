@@ -1,0 +1,11 @@
+/Users/pilu/Desktop/nft_trading/meta/target/debug/deps/sha3-cba7ab69074fbd9f.rmeta: /Users/pilu/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/sha3-0.9.1/src/lib.rs /Users/pilu/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/sha3-0.9.1/src/paddings.rs /Users/pilu/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/sha3-0.9.1/src/macros.rs /Users/pilu/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/sha3-0.9.1/src/reader.rs /Users/pilu/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/sha3-0.9.1/src/state.rs
+
+/Users/pilu/Desktop/nft_trading/meta/target/debug/deps/libsha3-cba7ab69074fbd9f.rlib: /Users/pilu/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/sha3-0.9.1/src/lib.rs /Users/pilu/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/sha3-0.9.1/src/paddings.rs /Users/pilu/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/sha3-0.9.1/src/macros.rs /Users/pilu/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/sha3-0.9.1/src/reader.rs /Users/pilu/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/sha3-0.9.1/src/state.rs
+
+/Users/pilu/Desktop/nft_trading/meta/target/debug/deps/sha3-cba7ab69074fbd9f.d: /Users/pilu/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/sha3-0.9.1/src/lib.rs /Users/pilu/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/sha3-0.9.1/src/paddings.rs /Users/pilu/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/sha3-0.9.1/src/macros.rs /Users/pilu/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/sha3-0.9.1/src/reader.rs /Users/pilu/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/sha3-0.9.1/src/state.rs
+
+/Users/pilu/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/sha3-0.9.1/src/lib.rs:
+/Users/pilu/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/sha3-0.9.1/src/paddings.rs:
+/Users/pilu/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/sha3-0.9.1/src/macros.rs:
+/Users/pilu/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/sha3-0.9.1/src/reader.rs:
+/Users/pilu/elrondsdk/vendor-rust/registry/src/github.com-1ecc6299db9ec823/sha3-0.9.1/src/state.rs:

@@ -1,0 +1,165 @@
+{
+    "buildInfo": {
+        "rustc": {
+            "version": "1.59.0-nightly",
+            "commitHash": "475b00aa4037461b506539a06d15ca6091b461a7",
+            "commitDate": "2021-12-24",
+            "channel": "Nightly",
+            "short": "rustc 1.59.0-nightly (475b00aa4 2021-12-24)"
+        },
+        "contractCrate": {
+            "name": "nft_trading",
+            "version": "0.0.0"
+        },
+        "framework": {
+            "name": "elrond-wasm",
+            "version": "0.27.4"
+        }
+    },
+    "name": "NftTrading",
+    "constructor": {
+        "inputs": [],
+        "outputs": []
+    },
+    "endpoints": [
+        {
+            "name": "getTxId",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "address",
+                    "type": "bytes"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "bytes"
+                }
+            ]
+        },
+        {
+            "name": "getTxInfos",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "tx_id",
+                    "type": "bytes"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "TxInfos"
+                }
+            ]
+        },
+        {
+            "name": "getLockedTokens",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "address",
+                    "type": "Address"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "List<Token>"
+                }
+            ]
+        },
+        {
+            "name": "getAuthorizedTokens",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "variadic<TokenIdentifier>",
+                    "multi_result": true
+                }
+            ]
+        },
+        {
+            "name": "addAuthorizedToken",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "token_id",
+                    "type": "TokenIdentifier"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "lock",
+            "mutability": "mutable",
+            "payableInTokens": [
+                "*"
+            ],
+            "inputs": [
+                {
+                    "name": "desired_tokens",
+                    "type": "List<Token>"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "swap",
+            "mutability": "mutable",
+            "payableInTokens": [
+                "*"
+            ],
+            "inputs": [
+                {
+                    "name": "tx_id",
+                    "type": "bytes"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "unlock",
+            "mutability": "mutable",
+            "inputs": [],
+            "outputs": []
+        }
+    ],
+    "hasCallback": false,
+    "types": {
+        "Token": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "amount",
+                    "type": "BigUint"
+                },
+                {
+                    "name": "identifier",
+                    "type": "TokenIdentifier"
+                },
+                {
+                    "name": "nonce",
+                    "type": "BigUint"
+                }
+            ]
+        },
+        "TxInfos": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "address_buyer",
+                    "type": "Address"
+                },
+                {
+                    "name": "locked_tokens",
+                    "type": "List<Token>"
+                },
+                {
+                    "name": "desired_tokens",
+                    "type": "List<Token>"
+                }
+            ]
+        }
+    }
+}
