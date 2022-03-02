@@ -6,27 +6,27 @@ elrond_wasm::derive_imports!();
 use elrond_wasm::elrond_codec::TopEncode;
 
 
+
+
+
 #[derive(TypeAbi, TopEncode, TopDecode, Clone)]
 pub struct IdGenerator<M: ManagedTypeApi> {
     pub timestamp: u64,
     pub caller_address: ManagedAddress<M>,
 }
 
-#[derive(TypeAbi, TopEncode, TopDecode, NestedEncode, NestedDecode, Clone)]
-pub struct Token<M: ManagedTypeApi> {
-    pub amount:  BigUint<M>,
-    pub identifier: TokenIdentifier<M>,
-    pub nonce: BigUint<M>,
-}
 
 #[derive(TypeAbi, TopEncode, TopDecode, Clone)]
 pub struct TxInfos<M: ManagedTypeApi> {
     pub address_buyer: ManagedAddress<M>,
-    pub locked_tokens: Vec<Token<M>>,
-    pub desired_tokens: Vec<Token<M>>,
+    pub locked_tokens: Vec<EsdtTokenPayment<M>>,
+    pub desired_tokens: Vec<EsdtTokenPayment<M>>,
 }
 
-const ARTIFICIAL_NONCE: u64 = 42069;
+
+
+
+
 
 
 #[elrond_wasm::derive::contract]
@@ -49,7 +49,7 @@ pub trait NftTrading {
 	// 3) Useful to record tokens that was locked and need to be unlock
     #[view(getLockedTokens)]
     #[storage_mapper("locked_tokens")]
-    fn locked_tokens(&self, address: &ManagedAddress) -> SingleValueMapper<Vec<Token<Self::Api>>>;
+    fn locked_tokens(&self, address: &ManagedAddress) -> SingleValueMapper<Vec<EsdtTokenPayment<Self::Api>>>;
 
     // 4) Record every authorized tradable tokens
     #[view(getAuthorizedTokens)]
@@ -58,13 +58,16 @@ pub trait NftTrading {
 
 
 
+
     // ******************* INIT FUNCTION **********************************
     #[init]
     fn init(&self) {
-		self.authorized_tokens().insert(TokenIdentifier::from("GNG-8d7e05".as_bytes()));
-		self.authorized_tokens().insert(TokenIdentifier::from("MEX-4183e7".as_bytes()));
-        self.authorized_tokens().insert(TokenIdentifier::from("WATER-104d38".as_bytes()));
+        self.add_authorized_token(TokenIdentifier::from("GNG-8d7e05".as_bytes()));
+        self.add_authorized_token(TokenIdentifier::from("MEX-4183e7".as_bytes()));
+        self.add_authorized_token(TokenIdentifier::from("WATER-104d38".as_bytes()));
+        self.add_authorized_token(TokenIdentifier::from("WEGLD-02bdfa".as_bytes()));
     }
+
 
     #[only_owner]
     #[endpoint(addAuthorizedToken)]
@@ -81,16 +84,14 @@ pub trait NftTrading {
     #[payable("*")]
     #[endpoint(lock)]
     fn lock(&self, #[payment_multi] payments: ManagedVec<EsdtTokenPayment<Self::Api>>,
-                    desired_tokens: Vec<Token<Self::Api>>)-> SCResult<()>{
+                    desired_tokens: Vec<EsdtTokenPayment<Self::Api>>)-> SCResult<()>{
 
 
 
         // Check if there is a payment                
         require!(!payments.is_empty(), "No tokens to be locked");
 
-
         let caller = self.blockchain().get_caller();
-        let caller_hex = ManagedBuffer::from(&caller.to_byte_array());
 
         // Check if the Buyer didn't already locked tokens
         require!(self.locked_tokens(&caller).is_empty(), "User has already locked tokens");
@@ -98,54 +99,31 @@ pub trait NftTrading {
 
 
     	// Generate a random transaction ID with a hash of the block timestamp and the caller address
-    	let id_generator = IdGenerator {
-            timestamp: self.blockchain().get_block_timestamp(),
-            caller_address: caller.clone(),
-        };
-    	
-    	let mut serialized_tx_id = Vec::new();
-        id_generator.top_encode(&mut serialized_tx_id)?;
+        let tx_id = self.generate_tx_id(&caller).unwrap();
 
-        let tx_id_hash = self.crypto().sha256_legacy(&serialized_tx_id);
-        let tx_id = ManagedBuffer::from(tx_id_hash.as_bytes());        
-
+        // Use as_managed_buffer() // TODO : check if it works
+        let caller_hex = caller.as_managed_buffer();        
     	self.tx_id(&caller_hex).set(&tx_id);
 
-        // Save the tokens information to be locked
-        let mut token_to_lock = Vec::new();
-        for token in &payments {
 
-    	    // Check if the token sent is an authorized token 
-            require!(self.authorized_tokens().contains(&token.token_identifier), "Token to lock not authorized");
-
-            // Give an artificial nonce to Esdt tokens (0 doesn't get recorded on the blockchain)
-            let custom_nonce = if token.token_type == EsdtTokenType::Fungible {
-                ARTIFICIAL_NONCE
-            }
-            else {
-                token.token_nonce
-            };
-
-            // Note : Nonces are stored as BigUint as they are more difficult to parse if U64
-            // Even though this is a temporary fix, it can be left as is since the storage used doesn't increase
-            // the format is stil 000000x[0-9a-f] with x being the number of bytes the nonce requires.            
-            token_to_lock.push(Token{
-                amount: token.amount,
-                identifier: token.token_identifier,
-                nonce: BigUint::from(custom_nonce),
-            });
-        }
-
-        // Check if the desired token is an authorized token 
+        // Check if the desired tokens are authorized
         for token in &desired_tokens { 
-            require!(self.authorized_tokens().contains(&token.identifier), "Desired token not authorized");
+            require!(self.authorized_tokens().contains(&token.token_identifier), "Desired token not authorized");
         }
+
+        // Check if the locked tokens are authorized  
+        for token in &payments { 
+            require!(self.authorized_tokens().contains(&token.token_identifier), "Locked token not authorized");
+        }
+
+
+        let tokens_to_lock = payments.into_vec();
 
         // Save all information for this transaction id.
-        self.locked_tokens(&caller).set(&token_to_lock);
+        self.locked_tokens(&caller).set(&tokens_to_lock);
         self.tx_infos(&tx_id).set(&TxInfos {
             address_buyer: caller.clone(),
-            locked_tokens: token_to_lock,
+            locked_tokens: tokens_to_lock,
             desired_tokens: desired_tokens,
         });
         
@@ -154,14 +132,15 @@ pub trait NftTrading {
     }
 
 
+
     // Swap function : to be called by the "Seller", sending the desired tokens along with the Tx id
     #[payable("*")]
     #[endpoint(swap)]
     fn swap(&self, #[payment_multi] _payments: ManagedVec<EsdtTokenPayment<Self::Api>>,
-    			   tx_id: ManagedBuffer) -> SCResult<()> {
-    	
+                    tx_id: ManagedBuffer) -> SCResult<()> {
+        
 
-   	    // Check if the tx id is valid 
+        // Check if the tx id is valid 
         require!(!self.tx_infos(&tx_id).is_empty(), "Transaction not valid : Buyer has unlocked his tokens or the swap has been made");         
 
         // Get the transaction infos
@@ -169,53 +148,39 @@ pub trait NftTrading {
         let buyer_address = tx_data.address_buyer;
         let tokens_locked = tx_data.locked_tokens;
         let tokens_desired = tx_data.desired_tokens;
-    	
-        // Get the seller address
-    	let seller_address = self.blockchain().get_caller();   
         
+        // Get the seller address
+        let seller_address = self.blockchain().get_caller();   
+        
+
         // Send the tokens locked to the Seller
         for token in tokens_locked {
-
-            let amount = token.amount;
-            let identifier = token.identifier;
-            let nonce = token.nonce.to_u64().unwrap();  
-            
-            // Convert back the nonce to 0 if it's an ESDT
-            let correct_nonce = self.convert_nonce(nonce);
-
-
-            self.send().direct(&seller_address, &identifier, correct_nonce, &amount , &[]);            
-            
-        }  
-        
+            self.send().direct(&seller_address, &token.token_identifier, token.token_nonce, &token.amount , &[]);                     
+        }
         // For future releases : Need to check if payment coincides with desired tokens
         // For now this works, cause the SC won't be able to send the desired tokens if it didn't receive them first
         // However if the Seller sends more, the rest will be kept in the SC
         for token in tokens_desired {
+            self.send().direct(&buyer_address, &token.token_identifier, token.token_nonce, &token.amount , &[]);                     
+        }              
 
-            let amount = token.amount;
-            let identifier = token.identifier;
-            let nonce = token.nonce.to_u64().unwrap();  
-
-            // Convert back the nonce to 0 if it's an ESDT
-            let correct_nonce = self.convert_nonce(nonce);
-
-            self.send().direct(&buyer_address, &identifier, correct_nonce, &amount , &[]);            
-            
-        }             
+        
 
 
-    	// Clear memory for this transaction, the swap has been made
+        // Clear memory for this transaction, the swap has been made
         self.tx_infos(&tx_id).clear();
         self.locked_tokens(&buyer_address).clear();
 
         // We need the address of the buyer in hexa to clear the tx id
-        let buyer_address_hex = ManagedBuffer::from(&buyer_address.to_byte_array());        
+        let buyer_address_hex = buyer_address.as_managed_buffer();        
         self.tx_id(&buyer_address_hex).clear();
-    	
-    	Ok(())
-    }     
+        
+        Ok(())//royalties_payment.royalties_needed)
+    
+    }    
 
+
+  
     // Unlock function : to be called by any "Buyer" that has locked tokens and wishes to unlock them
     #[endpoint(unlock)]
     fn unlock(&self) -> SCResult<()>{
@@ -226,23 +191,13 @@ pub trait NftTrading {
         // Check if the caller has tokens locked
         require!(!token_data.is_empty(), "Caller has no tokens locked");         
 
-
-        // Send back the tokens locked to the Buyer
+        // Send the locked tokens back to the Buyer
         for token in token_data {
-
-            let amount = token.amount;
-            let identifier = token.identifier;
-            let nonce = token.nonce.to_u64().unwrap();  
-            
-
-            let correct_nonce = self.convert_nonce(nonce);
-
-            self.send().direct(&caller, &identifier, correct_nonce, &amount , &[]);            
-            
+            self.send().direct(&caller, &token.token_identifier, token.token_nonce, &token.amount , &[]);                     
         }
 
         // We need the address of the caller in hexa to get the tx id
-        let caller_hex = ManagedBuffer::from(&caller.to_byte_array());
+        let caller_hex = caller.as_managed_buffer();
 		let tx_id = self.tx_id(&caller_hex).get(); 
 
     	// Clear memory for this transaction, the swap has been made
@@ -253,14 +208,30 @@ pub trait NftTrading {
 
         Ok(())
 
-    }
+    }     
+
 
     // ******************* HELPER FUNCTION ***************************
-    fn convert_nonce(&self, nonce: u64) -> u64{
-        if nonce==ARTIFICIAL_NONCE {
-            0
-        }else {
-            nonce
-        }
+
+
+    // Note : this function has to return either Option or SCResult in order to use ? with the top encode function
+    // Option doesn't natively do ManageBuffer, so SCResult was used, even though it should be used for endpoints only
+    fn generate_tx_id(&self, caller_address: &ManagedAddress) -> SCResult<ManagedBuffer> {
+        
+        let id_generator = IdGenerator {
+            timestamp: self.blockchain().get_block_timestamp(),
+            caller_address: caller_address.clone(),
+        };
+    	
+    	let mut serialized_tx_id = Vec::new();
+        id_generator.top_encode(&mut serialized_tx_id)?;  
+
+        let tx_id_hash = self.crypto().sha256_legacy(&serialized_tx_id);
+        
+        Ok(ManagedBuffer::from(tx_id_hash.as_bytes()))
+        
     }
+    
 }
+       
+
