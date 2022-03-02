@@ -16,3 +16,8 @@ AUTHORIZED_TOKENS = ["GNG-8d7e05",
                     "LKMEX-9acade", 
                     "WATER-104d38", 
                     "COLORS-14cff1"]
+
+TOKEN_TYPE_U8 = {"Fungible" : "00",
+                "NonFungible" : "01", 
+                "SemiFungible" : "02", 
+                "Meta" : "03"}

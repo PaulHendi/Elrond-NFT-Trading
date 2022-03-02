@@ -51,7 +51,7 @@ class SC_interactions:
             arguments=[],
             gas_price=self.gas_price,
             gas_limit=50000000,
-            value=None,
+            value="0",
             chain=self.chain,
             version=self.tx_version
         )
@@ -66,6 +66,16 @@ class SC_interactions:
         self.contract_address = self.contract.address
 
         print("\nContract address: ", self.contract_address.bech32())
+
+
+    def authorized_token(self, id) : 
+
+        owner = self.users["owner"]
+        payload = "addAuthorizedToken@" + self.formatter.text_to_hex(id) 
+
+
+        self.transaction(owner, self.contract, payload, value = "0")
+        owner.nonce += 1 
 
 
 
@@ -86,7 +96,6 @@ class SC_interactions:
 
         infos_parsed = self.formatter.tx_infos_parser(tx_infos)
            
-
         return infos_parsed
 
 
@@ -111,11 +120,12 @@ class SC_interactions:
     def lock(self, user, order): 
 
 
+
         payload = "@".join(["MultiESDTNFTTransfer", self.contract_address.hex(), self.formatter.num_to_hex(len(order["lock"])), \
                             "@".join(["@".join([token["id"], token["nonce"], token["amount"]]) for token in order["lock"]]), \
                             self.formatter.text_to_hex("lock"), \
                             self.formatter.swap_info_input(order["swap"])])
-                    
+        
 
         return self.transaction(user, user, payload) 
 
@@ -127,10 +137,7 @@ class SC_interactions:
 
             token["id"] = self.formatter.text_to_hex(token["id"])
             token["amount"] = self.formatter.num_to_hex(token["amount"])
-            if token["nonce"] == 42069 : 
-                token["nonce"] = "00"
-            else:  
-                token["nonce"] = self.formatter.num_to_hex(token["nonce"])            
+            token["nonce"] = self.formatter.num_to_hex(token["nonce"])            
 
         return swap_tokens
 

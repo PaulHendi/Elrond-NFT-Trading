@@ -38,51 +38,79 @@ class Formatter:
         return int(f"{num*decimals:.1f}".split(".")[0])         
 
 
-    # Note : For this current version, this function is fine. However for futur releases it will need to be updated
     def tx_infos_parser(self, tx_infos) : 
 
 
-        number_of_field = 3
-        sizes = re.findall('0{6}[0-9a-f][1-9a-f]', tx_infos)
-        lock_token_number = int(sizes[0])
-        desired_token_number = int(sizes[lock_token_number*number_of_field+1])
-        
-        infos = re.split('0{6}[0-9a-f][1-9a-f]', tx_infos)
-        addr_buyer = infos[0]
+        addr_size = 64
+        address_buyer = tx_infos[:addr_size]
+        size_tokens_locked = self.hex_to_num(tx_infos[addr_size:addr_size+8])
+        pointer = addr_size+8
         locked_tokens = []
-        start_index = 2
-        for i in range(lock_token_number) : 
+        for token in range(size_tokens_locked) : 
+            token_type = self.hex_to_num(tx_infos[pointer:pointer+2])
+            pointer+=2
+            token_identifier_size = self.hex_to_num(tx_infos[pointer:pointer+8])*2
+            pointer+=8
+            token_identifier = self.hex_to_text(tx_infos[pointer:pointer+token_identifier_size])
+            pointer+=token_identifier_size
+            token_nonce = self.hex_to_num(tx_infos[pointer:pointer+16])
+            pointer+=16
+            token_amount_size = self.hex_to_num(tx_infos[pointer:pointer+8])*2
+            pointer+=8
+            token_amount = self.hex_to_num(tx_infos[pointer:pointer+token_amount_size])
+            pointer+=token_amount_size
 
-            token = {"amount" : self.hex_to_num(infos[start_index+i*number_of_field]), 
-                    "id" : self.hex_to_text(infos[start_index+1+i*number_of_field]), 
-                    "nonce" : self.hex_to_num(infos[start_index+2+i*number_of_field])}        
-            
-            locked_tokens.append(token)
-        
+            locked_tokens.append({"type" : token_type,
+                "id" : token_identifier, 
+                "nonce" : token_nonce, 
+                "amount" : token_amount})            
+
+        size_tokens_desired = self.hex_to_num(tx_infos[pointer:pointer+8])
+        pointer +=8
         desired_tokens = []
-        start_index = lock_token_number*number_of_field+3
-        for j in range(desired_token_number) : 
-            
-            token = {"amount" : self.hex_to_num(infos[start_index+j*number_of_field]), 
-                    "id" : self.hex_to_text(infos[start_index+1+j*number_of_field]), 
-                    "nonce" : self.hex_to_num(infos[start_index+2+j*number_of_field])}
-            
-            desired_tokens.append(token)
-            
+        for token in range(size_tokens_desired) : 
+            token_desired_type = self.hex_to_num(tx_infos[pointer:pointer+2])
+            pointer+=2
+            token_desired_identifier_size = self.hex_to_num(tx_infos[pointer:pointer+8])*2
+            pointer+=8
+            token_desired_identifier = self.hex_to_text(tx_infos[pointer:pointer+token_desired_identifier_size])
+            pointer+=token_desired_identifier_size
+            token_desired_nonce = self.hex_to_num(tx_infos[pointer:pointer+16])
+            pointer+=16
+            token_desired_amount_size = self.hex_to_num(tx_infos[pointer:pointer+8])*2
+            pointer+=8
+            token_desired_amount = self.hex_to_num(tx_infos[pointer:pointer+token_desired_amount_size])
+            pointer+=token_desired_amount_size    
 
-        infos_parsed = {"address_buyer" : addr_buyer, "locked_tokens": locked_tokens, "desired_tokens" : desired_tokens}
+            desired_tokens.append({"type" : token_desired_type,
+                "id" : token_desired_identifier, 
+                "nonce" : token_desired_nonce, 
+                "amount" : token_desired_amount})
+                        
+
+        infos_parsed = {"address_buyer" : address_buyer, "locked_tokens": locked_tokens, "desired_tokens" : desired_tokens}
         
     
         return infos_parsed        
 
 
-    def swap_info_input(self, tokens) : 
+    # token = [token_type["Fungible"], "4d45582d343138336537",num_to_hex(0),"0DE0B6B3A7640000"]
 
+
+    def swap_info_input(self, tokens) : 
+        
+        u64_nb_hexa = 16
         output = ""
         for token in tokens : 
-            for token_info in ["amount", "id", "nonce"]: 
-                nb_bytes = hex(int(len(token[token_info])/2)).split("x")[1]
-                output+=("0"*7 + str(nb_bytes) + token[token_info])
+            output+=token["type"] # token_type (coded in u8)
+            nb_bytes = hex(int(len(token["id"])/2)).split("x")[1]
+            output+=("0"*7 + str(nb_bytes) + token["id"]) # token_identifier (with the size)
+            size_hexa = len(token["nonce"])
+            zeros_to_add = u64_nb_hexa - size_hexa
+            output+= "0"*zeros_to_add + token["nonce"]   # Nonce (coded in u64)
+            nb_bytes = hex(int(len(token["amount"])/2)).split("x")[1]
+            output+=("0"*7 + str(nb_bytes) + token["amount"])    # amount (with the size)
+
 
         return output
 

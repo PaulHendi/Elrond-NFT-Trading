@@ -18,18 +18,17 @@ class SC_flow(SC_interactions) :
         self.users["owner"].nonce += 1
 
 
-    def prepare_data(self,tokens, transaction = "lock") :
+    def prepare_data(self,tokens) :
 
 
         for token in tokens :
-            if TOKEN_TYPE[token["id"]]!="NFT" : 
+            if (token["type"]!="NonFungible") and (token["type"]!="SemiFungible") : 
                 token["amount"] = self.formatter.int_to_BigInt(float(token["amount"]), DECIMALS[token["id"]])
-                if transaction=="swap" : 
-                    token["nonce"] = 42069
 
             token["id"] = self.formatter.text_to_hex(token["id"])
             token["nonce"] = self.formatter.num_to_hex(int(token["nonce"]))
             token["amount"] = self.formatter.num_to_hex(token["amount"])
+            token["type"] = TOKEN_TYPE_U8[token["type"]]
 
         return tokens
 
@@ -51,8 +50,8 @@ class SC_flow(SC_interactions) :
 
         
         # Prepare data before calling the SC function
-        order["lock"] = self.prepare_data(order["lock"], "lock")
-        order["swap"] = self.prepare_data(order["swap"], "swap")
+        order["lock"] = self.prepare_data(order["lock"])
+        order["swap"] = self.prepare_data(order["swap"])
         
 
         user = self.users[order["user"]]
@@ -78,6 +77,8 @@ class SC_flow(SC_interactions) :
 
         print(f"\n\n{user} : get all information for this tx_id\n")
         infos_parsed = self.query_tx_infos(tx_id)
+
+        print(infos_parsed)
 
         addr_buyer = Address(infos_parsed["address_buyer"]).bech32()
         print(f"Buyer with address {addr_buyer} locked : ")
