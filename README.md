@@ -32,5 +32,3 @@ Interact : More details soon, meanwhile you can check the code.
 The code is ready to perform NFT/ESDT swaps, however this is a V1 and lots of improvement can be made in the future. Feel free to use the code, and improve it as well :)
 
 If you have any questions you can also contact me on [twitter](https://twitter.com/Piupmc)
-
-Also if you like this repo and you'd like to donate : [thank you!](https://warmy-donation.herokuapp.com/)
